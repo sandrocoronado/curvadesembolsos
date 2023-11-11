@@ -62,14 +62,67 @@ def run():
         
         selected_country = st.selectbox('Selecciona el Proyecto:', result_df['IDEtapa'].unique())
         filtered_df = result_df[result_df['IDEtapa'] == selected_country]
-        df_monto = filtered_df.groupby('Ano')["Monto"].sum().reset_index()
-        df_monto_acumulado = filtered_df.groupby('Ano')["Monto Acumulado"].last().reset_index()
-        df_porcentaje_monto_acumulado = filtered_df.groupby('Ano')["Porcentaje del Monto Acumulado"].last().reset_index()
-        df_porcentaje_monto_acumulado["Porcentaje del Monto Acumulado"] = df_porcentaje_monto_acumulado["Porcentaje del Monto Acumulado"].round(2)
-        combined_df = pd.concat([df_monto, df_monto_acumulado["Monto Acumulado"], df_porcentaje_monto_acumulado["Porcentaje del Monto Acumulado"]], axis=1)
+        
+        # Calcular Monto y Monto Acumulado para cada año
+        df_monto_anual = filtered_df.groupby('Ano')["Monto"].sum().reset_index()
+        df_monto_acumulado_anual = df_monto_anual['Monto'].cumsum()
+
+        # Calcular Porcentaje del Monto de forma acumulativa
+        aporte_total = filtered_df['AporteFonplata'].iloc[0]  # Asume que AporteFonplata es constante
+        df_porcentaje_monto_anual = (df_monto_anual['Monto'] / aporte_total * 100).round(2)
+        df_porcentaje_monto_acumulado_anual = (df_monto_acumulado_anual / aporte_total * 100).round(2)
+
+        # Crear DataFrame combinado para el cuadro de resumen
+        combined_df = pd.DataFrame({
+            'Ano': df_monto_anual['Ano'],
+            'Monto': df_monto_anual['Monto'],
+            'Monto Acumulado': df_monto_acumulado_anual,
+            'Porcentaje del Monto': df_porcentaje_monto_anual,
+            'Porcentaje del Monto Acumulado': df_porcentaje_monto_acumulado_anual
+        })
+
         st.write("Resumen de Datos:")
         st.write(combined_df)
 
+         # Definir colores para los gráficos
+        color_monto = 'steelblue'
+        color_porcentaje = 'firebrick'
+        color_acumulado = 'goldenrod'
+
+        # Función para crear gráficos de líneas con puntos y etiquetas
+        def line_chart_with_labels(data, x_col, y_col, title, color):
+            # Gráfico de línea con puntos
+            chart = alt.Chart(data).mark_line(point=alt.OverlayMarkDef(color=color, fill='white', strokeWidth=2), strokeWidth=3).encode(
+                x=alt.X(f'{x_col}:N', axis=alt.Axis(title='Año', labelAngle=0)),
+                y=alt.Y(f'{y_col}:Q', axis=alt.Axis(title=y_col)),
+                color=alt.value(color),
+                tooltip=[x_col, y_col]
+            ).properties(
+                title=title,
+                width=600,
+                height=400
+            )
+
+            # Etiquetas de texto para cada punto
+            text = chart.mark_text(
+                align='left',
+                baseline='middle',
+                dx=5  # Desplazamiento en el eje X para evitar solapamiento con los puntos
+            ).encode(
+                text=alt.Text(f'{y_col}:Q')
+            )
+
+            return chart + text  # Combinar gráfico de línea con etiquetas
+
+        # Crear los tres gráficos con etiquetas
+        chart_monto = line_chart_with_labels(combined_df, 'Ano', 'Monto', 'Monto por Año', color_monto)
+        chart_porcentaje_monto = line_chart_with_labels(combined_df, 'Ano', 'Porcentaje del Monto', 'Porcentaje del Monto por Año', color_porcentaje)
+        chart_porcentaje_monto_acumulado = line_chart_with_labels(combined_df, 'Ano', 'Porcentaje del Monto Acumulado', 'Porcentaje del Monto Acumulado por Año', color_acumulado)
+
+        # Mostrar los gráficos en Streamlit
+        st.altair_chart(chart_monto, use_container_width=True)
+        st.altair_chart(chart_porcentaje_monto, use_container_width=True)
+        st.altair_chart(chart_porcentaje_monto_acumulado, use_container_width=True)
 
 if __name__ == "__main__":
     run()
