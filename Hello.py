@@ -92,7 +92,7 @@ def run():
         # Función para crear gráficos de líneas con puntos y etiquetas
         def line_chart_with_labels(data, x_col, y_col, title, color):
             # Gráfico de línea con puntos
-            chart = alt.Chart(data).mark_line(point=alt.OverlayMarkDef(color=color, fill='white', strokeWidth=2), strokeWidth=3).encode(
+            chart = alt.Chart(data).mark_line(point=alt.OverlayMarkDef(color=color, fill='black', strokeWidth=2), strokeWidth=3).encode(
                 x=alt.X(f'{x_col}:N', axis=alt.Axis(title='Año', labelAngle=0)),
                 y=alt.Y(f'{y_col}:Q', axis=alt.Axis(title=y_col)),
                 color=alt.value(color),
