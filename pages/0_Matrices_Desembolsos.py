@@ -118,8 +118,26 @@ def run():
         st.write('Tabla de Montos:')
         st.dataframe(montos_pivot, width=1500, height=600)  # Ajusta el ancho y alto según sea necesario
 
+        # Convertir el DataFrame a bytes y agregar botón de descarga
+        excel_bytes = dataframe_to_excel_bytes(montos_pivot)
+        st.download_button(
+            label="Descargar DataFrame en Excel",
+            data=excel_bytes,
+            file_name="matriz_montos_desembolsos.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
         st.write('Tabla de Porcentajes del Monto:')
         st.dataframe(porcentaje_pivot, width=1500, height=600)
+
+        # Convertir el DataFrame a bytes y agregar botón de descarga
+        excel_bytes = dataframe_to_excel_bytes(porcentaje_pivot)
+        st.download_button(
+            label="Descargar DataFrame en Excel",
+            data=excel_bytes,
+            file_name="matriz_porcentaje_desembolsos.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
 if __name__ == "__main__":
     run()
