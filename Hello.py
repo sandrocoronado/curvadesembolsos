@@ -84,7 +84,7 @@ def run():
         st.write("Resumen de Datos:")
         st.write(combined_df)
 
-         # Definir colores para los gráficos
+        # Definir colores para los gráficos
         color_monto = 'steelblue'
         color_porcentaje = 'firebrick'
         color_acumulado = 'goldenrod'
@@ -107,11 +107,12 @@ def run():
             text = chart.mark_text(
                 align='left',
                 baseline='middle',
-                dx=5  # Desplazamiento en el eje X para evitar solapamiento con los puntos
+                dx=20,  # Desplazamiento en el eje X para evitar solapamiento con los puntos
+                dy=-20  # Desplazamiento en el eje Y para alejar el texto de la línea
             ).encode(
-                text=alt.Text(f'{y_col}:Q')
+                text=alt.Text(f'{y_col}:Q'),
+                color=alt.value('black')  # Establece el color del texto a negro
             )
-
             return chart + text  # Combinar gráfico de línea con etiquetas
 
         # Crear los tres gráficos con etiquetas
