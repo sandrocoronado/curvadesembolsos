@@ -99,7 +99,7 @@ def run():
             values='Monto', 
             aggfunc='sum'
         ).fillna(0)
-        
+
         # Agregar la columna de totales al final de la tabla de Montos
         montos_pivot['Total'] = montos_pivot.sum(axis=1)
 
@@ -110,9 +110,12 @@ def run():
             values='Porcentaje del Monto', 
             aggfunc='sum'
         ).fillna(0)
-        
+
+        # Redondear a dos decimales en el DataFrame de porcentajes
+        porcentaje_pivot = porcentaje_pivot.round(2)
+
         # Agregar la columna de totales al final de la tabla de Porcentajes
-        porcentaje_pivot['Total'] = porcentaje_pivot.sum(axis=1)
+        porcentaje_pivot['Total'] = porcentaje_pivot.sum(axis=1).round(0)
 
         # Mostrar las tablas en Streamlit con un ancho fijo y la posibilidad de desplazamiento horizontal
         st.write('Tabla de Montos:')
