@@ -1,52 +1,79 @@
 import streamlit as st
+from streamlit.logger import get_logger
+import threading
 
-# Configuración de la página
-st.set_page_config(page_title="Análisis de Desembolsos", layout="wide")
+LOGGER = get_logger(__name__)
+_lock = threading.Lock()
 
-# Título de la página
-st.markdown("<h1 style='text-align: center; color: black;'>📊 Análisis de Desembolsos</h1>", unsafe_allow_html=True)
+def pagina_inicial():
+    # Configuración de la página
+    st.set_page_config(page_title="Análisis de Desembolsos", layout="wide")
 
-# Introducción y descripción
-st.markdown("""
-Bienvenido a la aplicación de análisis de desembolsos! Esta herramienta interactiva te permitirá explorar y entender mejor los patrones y tendencias en los desembolsos de los Proyectos.
-""")
+    # Título de la página
+    st.markdown("<h1 style='text-align: center; color: black;'> Análisis de Desembolsos Fonplata 📊</h1>", unsafe_allow_html=True)
 
-# Instrucciones para navegar en la aplicación
-st.header("Cómo Navegar 🧭")
-st.markdown("""
-Explora las distintas secciones de la aplicación para obtener una comprensión completa de los desembolsos:
+    # Introducción y descripción con margen
+    st.markdown("""
+    <div style="margin-left: 3em;">
+        Bienvenido a la aplicación de análisis de desembolsos! Esta herramienta interactiva te permitirá explorar y entender mejor los patrones y tendencias en los desembolsos de los Proyectos para mejorar la toma de decisiones.
+    </div>
+    """, unsafe_allow_html=True)
 
-- **Curva de Proyectos**: Análisis detallado de los Montos Desembolsados de los proyectos y su progreso en Años. 
-- **Matrices de Desembolsos**: Explora las matrices detalladas de los Montos de los desembolsos y Porcentaje de los Desembolsos en los Años.
+    # Instrucciones para navegar en la aplicación con margen
+    st.markdown("""
+    <div style="margin-left: 3em;">
+        <h2 style='margin-bottom: 0;'>Cómo Navegar 🧭</h2>
+        <p>Explora las distintas secciones de la aplicación para obtener una comprensión completa de los desembolsos:</p>
+        <ul>
+            <li><strong>Curva de Proyectos</strong>: Análisis detallado de los Montos Desembolsados de los proyectos y su progreso en Años.</li>
+            <li><strong>Matrices de Desembolsos</strong>: Explora las matrices detalladas de los Montos de los desembolsos y Porcentaje de los Desembolsos en los Años.</li>
+        </ul>
+        <p>Selecciona la página que deseas visitar utilizando los enlaces a continuación:</p>
+        <ul>
+            <li><a href="https://curvadesembolsos.streamlit.app/Curva_Proyectos" target="_self">Curva de Proyectos</a></li>
+            <li><a href="https://curvadesembolsos.streamlit.app/Matrices_Desembolsos" target="_self">Matrices de Desembolsos</a></li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
-Selecciona la página que deseas visitar utilizando los enlaces a continuación:
-- [Curva_Proyectos](#curva-proyectos)
-- [Matrices_Desembolsos](#matrices-desembolsos)
-""")
 
-# Resumen ejecutivo o highlights
-st.header("Highlights 🌟")
-st.markdown("""
-- **Tendencia Anual**: Observa cómo han evolucionado los desembolsos año tras año.
-- **Comparación por Sector**: Analiza cómo se distribuyen los fondos entre diferentes sectores.
-- **Desembolsos Recientes**: Mantente al día con los últimos desembolsos y su impacto.
-""")
+    # Resumen ejecutivo o highlights con margen
+    st.markdown("""
+    <div style="margin-left: 3em;">
+        <h2 style='margin-bottom: 0;'>Resumen Ejecutivo 🌟</h2>
+        <ul>
+            <li><strong>Tendencia Anual</strong>: Observa cómo han evolucionado los desembolsos año tras año.</li>
+            <li><strong>Comparación por Paises</strong>: Analiza cómo se distribuyen los fondos entre diferentes paises.</li>
+            <li><strong>Desembolsos y sus Porcentajes</strong>: Mantente al día con los últimos desembolsos.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Información sobre metodología y fuentes de datos
-st.header("Metodología y Fuentes de Datos 📚")
-st.markdown("""
-Esta aplicación utiliza datos provenientes del Datawarehouse de las Tablas de Operaciones y Desembolsos, con una metodología detallada y rigurosa para asegurar la precisión y relevancia de los análisis presentados.
-""")
+    # Metodología y fuentes de datos con margen
+    st.markdown("""
+    <div style="margin-left: 3em;">
+        <h2 style='margin-bottom: 0;'>Metodología y Fuentes de Datos 📚</h2>
+        <p>Esta aplicación utiliza datos provenientes del Datawarehouse de las Tablas de Operaciones y Desembolsos, con una metodología detallada y rigurosa para asegurar la precisión y relevancia de los análisis presentados.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Sección de contacto y feedback
-st.header("Contacto y Feedback 📬")
-st.markdown("""
-¿Tienes preguntas o comentarios? No dudes en contactarnos a través de [acoronado@fonplata.org] o deja tus comentarios usando el formulario de feedback en la sección de 'Contacto'.
-""")
+    # Sección de contacto y feedback con margen
+    st.markdown("""
+    <div style="margin-left: 3em;">
+        <h2 style='margin-bottom: 0;'>Contacto y Feedback 📬</h2>
+        <p>¿Tienes preguntas o comentarios? No dudes en contactarnos a través de <a href='mailto:acoronado@fonplata.org'>acoronado@fonplata.org</a> o deja tus comentarios usando el formulario de feedback en la sección de 'Contacto'.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Pie de página con información adicional
-st.markdown("---")
-st.markdown("""
-Desarrollado por [Alessandro Coronado].
-""")
+    # Pie de página con información adicional
+    st.markdown("""
+    <div style="margin-left: 3em;">
+        <hr>
+        <p>Desarrollado por <strong>Alessandro Coronado</strong>.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    pagina_inicial()
+
 
