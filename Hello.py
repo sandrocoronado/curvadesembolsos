@@ -28,11 +28,6 @@ def pagina_inicial():
             <li><strong>Curva de Proyectos</strong>: Análisis detallado de los Montos Desembolsados de los proyectos y su progreso en Años.</li>
             <li><strong>Matrices de Desembolsos</strong>: Explora las matrices detalladas de los Montos de los desembolsos y Porcentaje de los Desembolsos en los Años.</li>
         </ul>
-        <p>Selecciona la página que deseas visitar utilizando los enlaces a continuación:</p>
-        <ul>
-            <li><a href="https://curvadesembolsos.streamlit.app/Curvas_Proyectos" target="_self">Curva de Proyectos</a></li>
-            <li><a href="https://curvadesembolsos.streamlit.app/Matrices_Desembolsos" target="_self">Matrices de Desembolsos</a></li>
-        </ul>
     </div>
     """, unsafe_allow_html=True)
 
