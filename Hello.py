@@ -14,27 +14,31 @@ def pagina_inicial():
 
     # Introducción y descripción con margen
     st.markdown("""
-    <div style="margin-left: 3em;">
-        Bienvenido a la aplicación de análisis de desembolsos! Esta herramienta interactiva te permitirá explorar y entender mejor los patrones y tendencias en los desembolsos de los Proyectos para mejorar la toma de decisiones.
+    <div style="margin-left: 4em;">
+        Bienvenido a la aplicación de análisis de desembolsos! Esta herramienta interactiva te permitirá explorar y entender mejor los patrones y tendencias en los desembolsos de los Proyectos para mejorar la toma de.
     </div>
     """, unsafe_allow_html=True)
 
     # Instrucciones para navegar en la aplicación con margen
     st.markdown("""
-    <div style="margin-left: 3em;">
+    <div style="margin-left: 4em;">
         <h2 style='margin-bottom: 0;'>Cómo Navegar 🧭</h2>
         <p>Explora las distintas secciones de la aplicación para obtener una comprensión completa de los desembolsos:</p>
+        <ul>
+            <li><strong>Curva de Proyectos</strong>: Análisis detallado de los Montos Desembolsados de los proyectos y su progreso en Años.</li>
+            <li><strong>Matrices de Desembolsos</strong>: Explora las matrices detalladas de los Montos de los desembolsos y Porcentaje de los Desembolsos en los Años.</li>
+        </ul>
+        <p>Selecciona la página que deseas visitar utilizando los enlaces a continuación:</p>
+        <ul>
+            <li><a href="https://curvadesembolsos.streamlit.app/Curvas_Proyectos" target="_self">Curva de Proyectos</a></li>
+            <li><a href="https://curvadesembolsos.streamlit.app/Matrices_Desembolsos" target="_self">Matrices de Desembolsos</a></li>
+        </ul>
     </div>
     """, unsafe_allow_html=True)
 
-    # Usa el nombre del archivo sin el número inicial, guiones bajos y sin la extensión .py
-    st.markdown("[Matrices de Desembolsos](/MatricesDesembolsos)")
-    st.markdown("[Curvas de Proyectos](/CurvasProyectos)")
-
-
     # Resumen ejecutivo o highlights con margen
     st.markdown("""
-    <div style="margin-left: 3em;">
+    <div style="margin-left: 4em;">
         <h2 style='margin-bottom: 0;'>Resumen Ejecutivo 🌟</h2>
         <ul>
             <li><strong>Tendencia Anual</strong>: Observa cómo han evolucionado los desembolsos año tras año.</li>
@@ -46,7 +50,7 @@ def pagina_inicial():
 
     # Metodología y fuentes de datos con margen
     st.markdown("""
-    <div style="margin-left: 3em;">
+    <div style="margin-left: 4em;">
         <h2 style='margin-bottom: 0;'>Metodología y Fuentes de Datos 📚</h2>
         <p>Esta aplicación utiliza datos provenientes del Datawarehouse de las Tablas de Operaciones y Desembolsos, con una metodología detallada y rigurosa para asegurar la precisión y relevancia de los análisis presentados.</p>
     </div>
@@ -54,7 +58,7 @@ def pagina_inicial():
 
     # Sección de contacto y feedback con margen
     st.markdown("""
-    <div style="margin-left: 3em;">
+    <div style="margin-left: 4em;">
         <h2 style='margin-bottom: 0;'>Contacto y Feedback 📬</h2>
         <p>¿Tienes preguntas o comentarios? No dudes en contactarnos a través de <a href='mailto:acoronado@fonplata.org'>acoronado@fonplata.org</a> o deja tus comentarios usando el formulario de feedback en la sección de 'Contacto'.</p>
     </div>
@@ -62,7 +66,7 @@ def pagina_inicial():
 
     # Pie de página con información adicional
     st.markdown("""
-    <div style="margin-left: 3em;">
+    <div style="margin-left: 4em;">
         <hr>
         <p>Desarrollado por <strong>Alessandro Coronado</strong>.</p>
     </div>
