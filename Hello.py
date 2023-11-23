@@ -14,7 +14,8 @@ def process_dataframe(xls_path):
         desembolsos = xls.parse('Desembolsos')
         operaciones = xls.parse('Operaciones')
 
-    merged_df = pd.merge(desembolsos, operaciones[['IDEtapa', 'FechaVigencia', 'AporteFonplata']], on='IDEtapa', how='left')
+    # Asegúrate de que las columnas 'SECTOR' y 'SUBSECTOR' estén en 'operaciones'
+    merged_df = pd.merge(desembolsos, operaciones[['IDEtapa', 'FechaVigencia', 'AporteFonplata', 'SECTOR', 'SUBSECTOR']], on='IDEtapa', how='left')
     merged_df['FechaEfectiva'] = pd.to_datetime(merged_df['FechaEfectiva'], dayfirst=True)
     merged_df['FechaVigencia'] = pd.to_datetime(merged_df['FechaVigencia'], dayfirst=True)
     merged_df['Ano'] = ((merged_df['FechaEfectiva'] - merged_df['FechaVigencia']).dt.days / 366).astype(int)
@@ -27,8 +28,12 @@ def process_dataframe(xls_path):
 
     country_map = {'AR': 'Argentina', 'BO': 'Bolivia', 'BR': 'Brasil', 'PY': 'Paraguay', 'UR': 'Uruguay'}
     result_df['Pais'] = result_df['IDEtapa'].str[:2].map(country_map).fillna('Desconocido')
-    
+
+    # Añadir 'SECTOR', 'SUBSECTOR' y 'FechaVigencia' al DataFrame resultante
+    result_df = pd.merge(result_df, operaciones[['IDEtapa', 'SECTOR', 'SUBSECTOR', 'FechaVigencia']], on='IDEtapa', how='left')
+
     return result_df
+
 
 def dataframe_to_excel_bytes(df):
     output = io.BytesIO()
@@ -84,6 +89,9 @@ def run():
         st.write("Resumen de Datos:")
         st.write(combined_df)
 
+        # Convertir Monto a millones y redondear a tres decimales
+        combined_df['Monto'] = (combined_df['Monto'] / 1_000_000).round(3)
+
         # Definir colores para los gráficos
         color_monto = 'steelblue'
         color_porcentaje = 'firebrick'
@@ -116,8 +124,8 @@ def run():
             return chart + text  # Combinar gráfico de línea con etiquetas
 
         # Crear los tres gráficos con etiquetas
-        chart_monto = line_chart_with_labels(combined_df, 'Ano', 'Monto', 'Monto por Año', color_monto)
-        chart_porcentaje_monto = line_chart_with_labels(combined_df, 'Ano', 'Porcentaje del Monto', 'Porcentaje del Monto por Año', color_porcentaje)
+        chart_monto = line_chart_with_labels(combined_df, 'Ano', 'Monto', 'Monto por Año en Millones de USD', color_monto)
+        chart_porcentaje_monto = line_chart_with_labels(combined_df, 'Ano', 'Porcentaje del Monto', 'Porcentaje del Monto Desembolsado por Año', color_porcentaje)
         chart_porcentaje_monto_acumulado = line_chart_with_labels(combined_df, 'Ano', 'Porcentaje del Monto Acumulado', 'Porcentaje del Monto Acumulado por Año', color_acumulado)
 
         # Mostrar los gráficos en Streamlit
