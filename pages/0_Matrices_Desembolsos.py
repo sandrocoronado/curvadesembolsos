@@ -14,7 +14,8 @@ def process_dataframe(xls_path):
         desembolsos = xls.parse('Desembolsos')
         operaciones = xls.parse('Operaciones')
 
-    merged_df = pd.merge(desembolsos, operaciones[['IDEtapa', 'FechaVigencia', 'AporteFonplata']], on='IDEtapa', how='left')
+    # Asegúrate de que las columnas 'SECTOR' y 'SUBSECTOR' estén en 'operaciones'
+    merged_df = pd.merge(desembolsos, operaciones[['IDEtapa', 'FechaVigencia', 'AporteFonplata', 'SECTOR', 'SUBSECTOR']], on='IDEtapa', how='left')
     merged_df['FechaEfectiva'] = pd.to_datetime(merged_df['FechaEfectiva'], dayfirst=True)
     merged_df['FechaVigencia'] = pd.to_datetime(merged_df['FechaVigencia'], dayfirst=True)
     merged_df['Ano'] = ((merged_df['FechaEfectiva'] - merged_df['FechaVigencia']).dt.days / 366).astype(int)
@@ -27,8 +28,12 @@ def process_dataframe(xls_path):
 
     country_map = {'AR': 'Argentina', 'BO': 'Bolivia', 'BR': 'Brasil', 'PY': 'Paraguay', 'UR': 'Uruguay'}
     result_df['Pais'] = result_df['IDEtapa'].str[:2].map(country_map).fillna('Desconocido')
-    
+
+    # Añadir 'SECTOR', 'SUBSECTOR' y 'FechaVigencia' al DataFrame resultante
+    result_df = pd.merge(result_df, operaciones[['IDEtapa', 'SECTOR', 'SUBSECTOR', 'FechaVigencia']], on='IDEtapa', how='left')
+
     return result_df
+
 
 def dataframe_to_excel_bytes(df):
     output = io.BytesIO()
@@ -100,6 +105,9 @@ def run():
             aggfunc='sum'
         ).fillna(0)
 
+        # Convertir los montos a millones
+        montos_pivot = (montos_pivot / 1_000_000).round(3)
+
         # Agregar la columna de totales al final de la tabla de Montos
         montos_pivot['Total'] = montos_pivot.sum(axis=1)
 
@@ -118,7 +126,7 @@ def run():
         porcentaje_pivot['Total'] = porcentaje_pivot.sum(axis=1).round(0)
 
         # Mostrar las tablas en Streamlit con un ancho fijo y la posibilidad de desplazamiento horizontal
-        st.write('Tabla de Montos:')
+        st.write('Tabla de Montos En Millones de USD:')
         st.dataframe(montos_pivot, width=1500, height=600)  # Ajusta el ancho y alto según sea necesario
 
         # Convertir el DataFrame a bytes y agregar botón de descarga
