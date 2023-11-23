@@ -24,17 +24,12 @@ def pagina_inicial():
     <div style="margin-left: 3em;">
         <h2 style='margin-bottom: 0;'>Cómo Navegar 🧭</h2>
         <p>Explora las distintas secciones de la aplicación para obtener una comprensión completa de los desembolsos:</p>
-        <ul>
-            <li><strong>Curva de Proyectos</strong>: Análisis detallado de los Montos Desembolsados de los proyectos y su progreso en Años.</li>
-            <li><strong>Matrices de Desembolsos</strong>: Explora las matrices detalladas de los Montos de los desembolsos y Porcentaje de los Desembolsos en los Años.</li>
-        </ul>
-        <p>Selecciona la página que deseas visitar utilizando los enlaces a continuación:</p>
-        <ul>
-            <li><a href="https://curvadesembolsos.streamlit.app/Curva_Proyectos" target="_self">Curva de Proyectos</a></li>
-            <li><a href="https://curvadesembolsos.streamlit.app/Matrices_Desembolsos" target="_self">Matrices de Desembolsos</a></li>
-        </ul>
     </div>
     """, unsafe_allow_html=True)
+
+    # Usa el nombre del archivo sin el número inicial, guiones bajos y sin la extensión .py
+    st.markdown("[Matrices de Desembolsos](/MatricesDesembolsos)")
+    st.markdown("[Curvas de Proyectos](/CurvasProyectos)")
 
 
     # Resumen ejecutivo o highlights con margen
