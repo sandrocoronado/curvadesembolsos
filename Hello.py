@@ -10,12 +10,12 @@ def pagina_inicial():
     st.set_page_config(page_title="Análisis de Desembolsos", layout="wide")
 
     # Título de la página
-    st.markdown("<h1 style='text-align: center; color: black;'> Análisis de Desembolsos Fonplata 📊</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: black;'>Análisis de Desembolsos Fonplata</h1>", unsafe_allow_html=True)
 
     # Introducción y descripción con margen
     st.markdown("""
     <div style="margin-left: 4em;">
-        Bienvenido a la aplicación de análisis de desembolsos! Esta herramienta interactiva te permitirá explorar y entender mejor los patrones y tendencias en los desembolsos de los Proyectos para mejorar la toma de.
+        Bienvenido a la aplicación de análisis de desembolsos! Esta herramienta interactiva te permitirá explorar y entender mejor los patrones y tendencias en los desembolsos de los Proyectos.
     </div>
     """, unsafe_allow_html=True)
 
@@ -43,6 +43,12 @@ def pagina_inicial():
     </div>
     """, unsafe_allow_html=True)
 
+    st.markdown("""
+        <div style='text-align: center;'>
+            <img src='https://www.fonplata.org/sites/default/files/glazed-cms-media/SELECCION-BANDERAS.jpg?fid=5544' width='800'>
+        </div>
+        """, unsafe_allow_html=True)
+
     # Metodología y fuentes de datos con margen
     st.markdown("""
     <div style="margin-left: 4em;">
@@ -55,7 +61,7 @@ def pagina_inicial():
     st.markdown("""
     <div style="margin-left: 4em;">
         <h2 style='margin-bottom: 0;'>Contacto y Feedback 📬</h2>
-        <p>¿Tienes preguntas o comentarios? No dudes en contactarnos a través de <a href='mailto:acoronado@fonplata.org'>acoronado@fonplata.org</a> o deja tus comentarios usando el formulario de feedback en la sección de 'Contacto'.</p>
+        <p>¿Tienes preguntas o comentarios? No dudes en contactarnos a través de <a href='mailto:acoronado@fonplata.org'>acoronado@fonplata.org</a> </p>
     </div>
     """, unsafe_allow_html=True)
 

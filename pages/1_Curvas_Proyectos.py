@@ -48,7 +48,7 @@ def run():
         page_icon="👋",
     )
 
-    st.title("Análisis de Desembolsos 👋")
+    st.title("Desembolsos de Proyectos📊")
     st.write("Carga tu archivo Excel y explora las métricas relacionadas con los desembolsos.")
     uploaded_file = st.file_uploader("Carga tu Excel aquí", type="xlsx")
     
