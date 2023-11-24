@@ -150,5 +150,55 @@ def run():
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
+        # Aplicando la misma lógica para calcular los años hasta ahora y la categorización
+        porcentaje_pivot['Años hasta Ahora'] = porcentaje_pivot.iloc[:, 1:10].apply(
+            lambda row: row.last_valid_index(), axis=1
+        )
+
+        # Creando la función de categorización
+        def categorize_project(row):
+            if row['Total'] == 100:
+                return 'Completado'
+            elif row['Total'] >= 50:
+                return 'Últimos Desembolsos'
+            else:
+                return 'Empezando sus Desembolsos'
+
+        # Identificamos las columnas que contienen los porcentajes por año, excluyendo 'Total' y 'Años hasta Ahora'
+        year_columns = [col for col in porcentaje_pivot.columns if col not in ['Total', 'Años hasta Ahora']]
+
+        # Encontramos el último año con un valor que no sea cero para cada proyecto
+        last_year_with_value = porcentaje_pivot[year_columns].apply(lambda row: row[row > 0].last_valid_index(), axis=1)
+
+        # Agregamos esta información al DataFrame
+        porcentaje_pivot['Último Año'] = last_year_with_value
+
+        # Creando la columna de categorización
+        porcentaje_pivot['Categoría'] = porcentaje_pivot.apply(categorize_project, axis=1)
+
+        # Restableciendo el índice para convertir 'IDEtapa' de nuevo en una columna
+        porcentaje_pivot_reset = porcentaje_pivot.reset_index()
+
+        # Seleccionando las columnas para la tabla final
+        final_table_pivot = porcentaje_pivot_reset[['IDEtapa', 'Total', 'Último Año', 'Categoría']]
+
+        # Creando la columna de categorización
+        porcentaje_pivot['Categoría'] = porcentaje_pivot.apply(categorize_project, axis=1)
+
+        # Contando el número de proyectos en cada categoría
+        category_counts_pivot = porcentaje_pivot['Categoría'].value_counts()
+
+        # Utilizar st.columns para colocar gráficos lado a lado
+        col1, col2 = st.columns(2)
+        with col1:
+            # Mostrando las primeras filas de la tabla final
+            final_table_pivot
+
+        with col2:
+            # Mostrando las primeras filas de la tabla final
+            category_counts_pivot
+
+        
+
 if __name__ == "__main__":
     run()
