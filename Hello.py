@@ -27,6 +27,8 @@ def pagina_inicial():
         <ul>
             <li><strong>Curva de Proyectos</strong>: Análisis detallado de los Montos Desembolsados de los proyectos y su progreso en Años.</li>
             <li><strong>Matrices de Desembolsos</strong>: Explora las matrices detalladas de los Montos de los desembolsos y Porcentaje de los Desembolsos en los Años.</li>
+            <li><strong>Curva de Sectores</strong>: Análisis de los Montos Desembolsados de los proyectos y su progreso en Años y por Sectores.</li>
+            <li><strong>Curva de Paises</strong>: Análisis de los Montos Desembolsados de los proyectos y su progreso en Años y por Paises.</li>      
         </ul>
     </div>
     """, unsafe_allow_html=True)

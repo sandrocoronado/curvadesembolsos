@@ -32,7 +32,7 @@ def run_for_sector():
         page_icon="🌍",
     )
 
-    st.title("Análisis de Desembolsos por Sector 🌍")
+    st.title("Análisis de Desembolsos por Sector")
     st.write("Carga tu archivo Excel y explora las métricas relacionadas con los desembolsos por sector.")
 
     uploaded_file = st.file_uploader("Carga tu Excel aquí", type="xlsx")
