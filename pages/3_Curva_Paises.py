@@ -29,7 +29,7 @@ def process_dataframe(xls_path):
     result_df['Pais'] = result_df['IDEtapa'].str[:2].map(country_map).fillna('Desconocido')
 
     # Añadir 'SECTOR', 'SUBSECTOR' y 'FechaVigencia' 'APODO' al DataFrame resultante
-    result_df = pd.merge(result_df, operaciones[['IDEtapa', 'SECTOR', 'SUBSECTOR', 'FechaVigencia','APODO']], on='IDEtapa', how='left')
+    result_df = pd.merge(result_df, operaciones[['IDEtapa', 'SECTOR', 'SUBSECTOR', 'FechaVigencia','APODO']],desembolsos['FechaEfectiva'], on='IDEtapa', how='left')
 
     return result_df
 
