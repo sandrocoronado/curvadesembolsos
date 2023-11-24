@@ -3,6 +3,7 @@ import pandas as pd
 from streamlit.logger import get_logger
 import altair as alt
 import threading
+import io  # <-- Importa io
 
 LOGGER = get_logger(__name__)
 _lock = threading.Lock()
@@ -25,6 +26,16 @@ def process_dataframe_for_sector(xls_path):
     result_df['Porcentaje del Monto Acumulado'] = result_df.groupby(['SECTOR'])['Monto Acumulado'].apply(lambda x: x / x.max() * 100).reset_index(drop=True)
 
     return result_df
+    
+
+def dataframe_to_excel_bytes(df):
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, sheet_name='Resultados', index=False)
+    output.seek(0)
+    return output
+
+    
 
 def run_for_sector():
     st.set_page_config(
@@ -40,6 +51,15 @@ def run_for_sector():
     if uploaded_file:
         result_df = process_dataframe_for_sector(uploaded_file)
         st.write(result_df)
+
+        # Convertir el DataFrame a bytes y agregar botón de descarga
+        excel_bytes = dataframe_to_excel_bytes(result_df)
+        st.download_button(
+            label="Descargar DataFrame en Excel",
+            data=excel_bytes,
+            file_name="resultados_desembolsos.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
         selected_sector = st.selectbox('Selecciona el Sector:', result_df['SECTOR'].unique())
 
@@ -60,6 +80,15 @@ def run_for_sector():
 
         st.write("Resumen de Datos:")
         st.write(df_monto)
+
+        # Convertir el DataFrame a bytes y agregar botón de descarga
+        excel_bytes = dataframe_to_excel_bytes(df_monto)
+        st.download_button(
+            label="Descargar DataFrame en Excel",
+            data=excel_bytes,
+            file_name="sectores_desembolsos.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
         # Definir colores para los gráficos
         color_monto = 'steelblue'
