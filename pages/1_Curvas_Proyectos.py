@@ -29,8 +29,8 @@ def process_dataframe(xls_path):
     country_map = {'AR': 'Argentina', 'BO': 'Bolivia', 'BR': 'Brasil', 'PY': 'Paraguay', 'UR': 'Uruguay'}
     result_df['Pais'] = result_df['IDEtapa'].str[:2].map(country_map).fillna('Desconocido')
 
-    # Añadir 'SECTOR', 'SUBSECTOR' y 'FechaVigencia' al DataFrame resultante
-    result_df = pd.merge(result_df, operaciones[['IDEtapa', 'SECTOR', 'SUBSECTOR', 'FechaVigencia']], on='IDEtapa', how='left')
+    # Añadir 'SECTOR', 'SUBSECTOR' y 'FechaVigencia' 'APODO' al DataFrame resultante
+    result_df = pd.merge(result_df, operaciones[['IDEtapa', 'SECTOR', 'SUBSECTOR', 'FechaVigencia','APODO']], on='IDEtapa', how='left')
 
     return result_df
 
@@ -65,8 +65,16 @@ def run():
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
         
-        selected_country = st.selectbox('Selecciona el Proyecto:', result_df['IDEtapa'].unique())
+        # Suponiendo que 'result_df' es tu DataFrame y tiene las columnas 'IDEtapa' y 'APODO'
+        combined_series = result_df['IDEtapa'] + " (" + result_df['APODO'] + ")"
+
+        # Usando esta serie combinada en el selectbox
+        selected_combined = st.selectbox('Selecciona el Proyecto:', combined_series.unique())
+
+        # Extraemos el valor de 'IDEtapa' del texto seleccionado para filtrar el DataFrame
+        selected_country = selected_combined.split(" (")[0]
         filtered_df = result_df[result_df['IDEtapa'] == selected_country]
+
         
         # Calcular Monto y Monto Acumulado para cada año
         df_monto_anual = filtered_df.groupby('Ano')["Monto"].sum().reset_index()
