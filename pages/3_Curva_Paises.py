@@ -27,7 +27,7 @@ def process_dataframe(xls_path):
     merged_df['Meses'] = ((merged_df['FechaEfectiva'] - merged_df['FechaVigencia']).dt.days / 30).astype(int)
 
     # Agrupar y calcular montos acumulados y porcentajes
-    result_df = merged_df.groupby(['IDEtapa', 'Ano', 'Meses', 'IDDesembolso', 'AporteFonplata'])['Monto'].sum().reset_index()
+    result_df = merged_df.groupby(['IDEtapa', 'FechaEfectiva', 'Ano', 'Meses', 'IDDesembolso', 'AporteFonplata'])['Monto'].sum().reset_index()
     result_df['Monto Acumulado'] = result_df.groupby(['IDEtapa'])['Monto'].cumsum()
     result_df['Porcentaje del Monto'] = result_df['Monto'] / result_df['AporteFonplata'] * 100
     result_df['Porcentaje del Monto Acumulado'] = result_df['Monto Acumulado'] / result_df['AporteFonplata'] * 100
