@@ -7,43 +7,47 @@ import threading
 LOGGER = get_logger(__name__)
 _lock = threading.Lock()
 
-def process_dataframe_for_sector(xls_path):
+def process_dataframe(xls_path):
     with _lock:
         xls = pd.ExcelFile(xls_path, engine='openpyxl')
         desembolsos = xls.parse('Desembolsos')
         operaciones = xls.parse('Operaciones')
 
-    merged_df = pd.merge(desembolsos, operaciones[['IDEtapa', 'FechaVigencia', 'SECTOR']], on='IDEtapa', how='left')
+    merged_df = pd.merge(desembolsos, operaciones[['IDEtapa', 'FechaVigencia']], on='IDEtapa', how='left')
     merged_df['FechaEfectiva'] = pd.to_datetime(merged_df['FechaEfectiva'], dayfirst=True)
     merged_df['FechaVigencia'] = pd.to_datetime(merged_df['FechaVigencia'], dayfirst=True)
     merged_df['Ano'] = ((merged_df['FechaEfectiva'] - merged_df['FechaVigencia']).dt.days / 366).astype(int)
     merged_df['Meses'] = ((merged_df['FechaEfectiva'] - merged_df['FechaVigencia']).dt.days / 30).astype(int)
     
-    result_df = merged_df.groupby(['SECTOR', 'Ano', 'Meses', 'IDDesembolso'])['Monto'].sum().reset_index()
-    result_df['Monto Acumulado'] = result_df.groupby(['SECTOR'])['Monto'].cumsum().reset_index(drop=True)
-    result_df['Porcentaje del Monto'] = result_df.groupby(['SECTOR'])['Monto'].apply(lambda x: x / x.sum() * 100).reset_index(drop=True)
-    result_df['Porcentaje del Monto Acumulado'] = result_df.groupby(['SECTOR'])['Monto Acumulado'].apply(lambda x: x / x.max() * 100).reset_index(drop=True)
+    # Asignar países
+    country_map = {'AR': 'Argentina', 'BO': 'Bolivia', 'BR': 'Brasil', 'PY': 'Paraguay', 'UR': 'Uruguay'}
+    merged_df['Pais'] = merged_df['IDEtapa'].str[:2].map(country_map).fillna('Desconocido')
+    
+    result_df = merged_df.groupby(['Pais', 'Ano', 'Meses', 'IDDesembolso'])['Monto'].sum().reset_index()
+    result_df['Monto Acumulado'] = result_df.groupby(['Pais'])['Monto'].cumsum().reset_index(drop=True)
+    result_df['Porcentaje del Monto'] = result_df.groupby(['Pais'])['Monto'].apply(lambda x: x / x.sum() * 100).reset_index(drop=True)
+    result_df['Porcentaje del Monto Acumulado'] = result_df.groupby(['Pais'])['Monto Acumulado'].apply(lambda x: x / x.max() * 100).reset_index(drop=True)
 
     return result_df
 
-def run_for_sector():
+def run():
     st.set_page_config(
-        page_title="Desembolsos por Sector",
+        page_title="Desembolsos por País",
         page_icon="🌍",
     )
 
-    st.title("Análisis de Desembolsos por Sector 🌍")
-    st.write("Carga tu archivo Excel y explora las métricas relacionadas con los desembolsos por sector.")
+    st.title("Análisis de Desembolsos por País 🌍")
+    st.write("Carga tu archivo Excel y explora las métricas relacionadas con los desembolsos por país.")
 
     uploaded_file = st.file_uploader("Carga tu Excel aquí", type="xlsx")
 
     if uploaded_file:
-        result_df = process_dataframe_for_sector(uploaded_file)
+        result_df = process_dataframe(uploaded_file)
         st.write(result_df)
 
-        selected_sector = st.selectbox('Selecciona el Sector:', result_df['SECTOR'].unique())
+        selected_country = st.selectbox('Selecciona el País:', result_df['Pais'].unique())
 
-        filtered_df = result_df[result_df['SECTOR'] == selected_sector]
+        filtered_df = result_df[result_df['Pais'] == selected_country]
 
         df_monto = filtered_df.groupby('Ano')["Monto"].mean().reset_index()
         df_monto_acumulado = filtered_df.groupby('Ano')["Monto Acumulado"].mean().reset_index()
@@ -59,7 +63,7 @@ def run_for_sector():
             y='Monto:Q',
             tooltip=['Ano', 'Monto']
         ).properties(
-            title=f'Promedio de Monto por año para {selected_sector}',
+            title=f'Promedio de Monto por año para {selected_country}',
             width=600,
             height=400
         )
@@ -70,7 +74,7 @@ def run_for_sector():
             y='Monto Acumulado:Q',
             tooltip=['Ano', 'Monto Acumulado']
         ).properties(
-            title=f'Promedio de Monto Acumulado por año para {selected_sector}',
+            title=f'Promedio de Monto Acumulado por año para {selected_country}',
             width=600,
             height=400
         )
@@ -81,7 +85,7 @@ def run_for_sector():
             y='Porcentaje del Monto Acumulado:Q',
             tooltip=['Ano', 'Porcentaje del Monto Acumulado']
         ).properties(
-            title=f'Promedio del Porcentaje del Monto Acumulado por año para {selected_sector}',
+            title=f'Promedio del Porcentaje del Monto Acumulado por año para {selected_country}',
             width=600,
             height=400
         )
@@ -89,4 +93,4 @@ def run_for_sector():
 
 
 if __name__ == "__main__":
-    run_for_sector()
+    run()
