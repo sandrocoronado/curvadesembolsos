@@ -51,7 +51,7 @@ def calculate_segment_statistics(rfm):
     # Aplicar redondeo después del cálculo
     segment_stats['Recency_mean'] = segment_stats['Recency_mean'].round(0)
     segment_stats['Frequency_mean'] = segment_stats['Frequency_mean'].round(0)
-    segment_stats['Monetary_mean'] = (segment_stats['Monetary_mean']/1000000).round(0)
+    segment_stats['Monetary_mean'] = (segment_stats['Monetary_mean']/1000).round(3)
 
     return segment_stats
 
