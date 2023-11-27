@@ -42,9 +42,9 @@ def assign_segment(row):
     
 def calculate_segment_statistics(rfm):
     segment_stats = rfm.groupby('Segment').agg(
-        Recency_mean=('Recency', 'mean'),
-        Frequency_mean=('Frequency', 'mean'),
-        Monetary_mean=('Monetary', 'mean'),
+        Recency_mean=('Recency', 'mean').round(0),
+        Frequency_mean=('Frequency', 'mean').round(0),
+        Monetary_mean=('Monetary', 'mean').round(0),
         Count=('IDEtapa', 'count')
     ).reset_index()
     return segment_stats
