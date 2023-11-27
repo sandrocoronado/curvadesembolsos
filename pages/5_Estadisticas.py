@@ -112,39 +112,33 @@ def main():
         # Selectbox para filtrar por Estado
         estado_filter = st.selectbox('Filtrar por Estado', ['Todos', 'Terminado', 'Vigente'])
         if estado_filter != 'Todos':
-            filtered_rfm = rfm[rfm['Estado'] == estado_filter]
-        else:
-            filtered_rfm = rfm
+            rfm = rfm[rfm['Estado'] == estado_filter]
 
         # Selector de sector para el gráfico 3D
         sectors = ['Todos'] + list(operaciones['SECTOR'].unique())
         selected_sector = st.selectbox('Selecciona un sector para el gráfico 3D', sectors)
         if selected_sector != 'Todos':
-            sector_filtered_rfm = filtered_rfm[filtered_rfm['SECTOR'] == selected_sector]
-        else:
-            sector_filtered_rfm = filtered_rfm
-
-        if st.checkbox("Mostrar gráfico 3D por Sector"):
-            fig = plot_3d(sector_filtered_rfm, operaciones)
-            st.pyplot(fig)
+            rfm = rfm[rfm['SECTOR'] == selected_sector]
 
         # Selector de país para el gráfico 3D
         countries = ['Todos'] + list(rfm['Country'].unique())
         selected_country = st.selectbox('Selecciona un país para el gráfico 3D', countries)
         if selected_country != 'Todos':
-            country_filtered_rfm = filtered_rfm[filtered_rfm['Country'] == selected_country]
-        else:
-            country_filtered_rfm = filtered_rfm
-
-        if st.checkbox("Mostrar gráfico 3D por País"):
-            fig = plot_3d_by_country(country_filtered_rfm)
-            st.pyplot(fig)
+            rfm = rfm[rfm['Country'] == selected_country]
 
         if st.checkbox("Mostrar análisis RFM"):
-            st.write(filtered_rfm)
+            st.write(rfm)
+
+        if st.checkbox("Mostrar gráfico 3D por Sector"):
+            fig = plot_3d(rfm, operaciones)
+            st.pyplot(fig)
+
+        if st.checkbox("Mostrar gráfico 3D por País"):
+            fig = plot_3d_by_country(rfm)
+            st.pyplot(fig)
 
         # Cálculo de estadísticas de segmentos
-        if st.checkbox("Mostrar estadísticas de segmentos"):
+        if st.checkbox("Mostrar estadísticas de segmentos"):g
             segment_stats = calculate_segment_statistics(rfm)
             st.write(segment_stats)
 
