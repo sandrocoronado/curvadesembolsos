@@ -42,12 +42,19 @@ def assign_segment(row):
     
 def calculate_segment_statistics(rfm):
     segment_stats = rfm.groupby('Segment').agg(
-        Recency_mean=('Recency', 'mean').round(0),
-        Frequency_mean=('Frequency', 'mean').round(0),
-        Monetary_mean=('Monetary', 'mean').round(0),
+        Recency_mean=('Recency', 'mean'),
+        Frequency_mean=('Frequency', 'mean'),
+        Monetary_mean=('Monetary', 'mean'),
         Count=('IDEtapa', 'count')
     ).reset_index()
+
+    # Aplicar redondeo después del cálculo
+    segment_stats['Recency_mean'] = segment_stats['Recency_mean'].round(0)
+    segment_stats['Frequency_mean'] = segment_stats['Frequency_mean'].round(0)
+    segment_stats['Monetary_mean'] = segment_stats['Monetary_mean'].round(0)
+
     return segment_stats
+
 
 # Función para crear el gráfico 3D
 def plot_3d(rfm, sector_data):
