@@ -58,17 +58,7 @@ def main():
         if st.button('Calculate'):
             process_data(data, selected_year, selected_month)
 
-        # Display filtered DataFrame to Excel for download
-        if st.button('Download Excel'):
-            # Filter data for selected month and year
-            filtered_data = data[(data['FechaEfectiva'].dt.year == selected_year) & (data['FechaEfectiva'].dt.month == selected_month)]
-            excel_bytes = dataframe_to_excel_bytes(filtered_data)
-            st.download_button(
-                label="Download Excel",
-                data=excel_bytes,
-                file_name=f"{selected_year}_{selected_month}_data.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+        
 
 if __name__ == "__main__":
     main()
