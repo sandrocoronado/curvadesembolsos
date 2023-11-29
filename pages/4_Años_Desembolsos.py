@@ -3,73 +3,78 @@ import pandas as pd
 import io
 from datetime import datetime
 
-# Dictionary mapping month numbers to names
-MONTHS = {
-    1: "Enero", 2: "Febrero", 3: "Marzo",
-    4: "Abril", 5: "Mayo", 6: "Junio",
-    7: "Julio", 8: "Agosto", 9: "Septiembre",
-    10: "Octubre", 11: "Noviembre", 12: "Diciembre"
-}
-
-# Convert DataFrame to Excel format in memory
+# Function to convert DataFrame to Excel format in memory
 def dataframe_to_excel_bytes(df):
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, sheet_name='Sheet1', index=False)
+        df.to_excel(writer, index=False)
     output.seek(0)
     return output.getvalue()
 
+# Function to display results in a formatted table
+def display_results(df, total_amount, distinct_ids):
+    # Display the DataFrame as a table
+    st.dataframe(df.style.format({"Monto": "{:,.2f}"}))
+
+    # Display summary below the table
+    st.write(f"(Suma del Monto): {total_amount:,.2f}")
+    st.write(f"(Cantidad de IDOperacion Distintos): {distinct_ids}")
+
 # Function to process the data
-def process_data(uploaded_file):
-    if uploaded_file is not None:
-        # Read the data from the uploaded file
-        data = pd.read_excel(uploaded_file)
+def process_data(data, year, month):
+    # Filter the data based on the selected month and year
+    filtered_data = data[(data['FechaEfectiva'].dt.year == year) & (data['FechaEfectiva'].dt.month == month)]
 
-        # Convert 'FechaEfectiva' to datetime
-        data['FechaEfectiva'] = pd.to_datetime(data['FechaEfectiva'], errors='coerce')
+    # Calculate the sum of 'Monto' and count of distinct 'IDOperacion'
+    total_amount = filtered_data['Monto'].sum()
+    distinct_ids = filtered_data['IDOperacion'].nunique()
 
-        # Extract month and year from 'FechaEfectiva'
-        data['Month'] = data['FechaEfectiva'].dt.month
-        data['Year'] = data['FechaEfectiva'].dt.year
-
-        # Allow the user to select a year and a month
-        year = st.selectbox("Select Year", sorted(data['Year'].unique()))
-        month = st.selectbox("Select Month", list(MONTHS.keys()), format_func=lambda x: MONTHS[x])
-
-        # Filter the data based on the selected month and year
-        filtered_data = data[(data['Month'] == month) & (data['Year'] == year)]
-
-        # Calculate the sum of 'Monto' and count of distinct 'IDOperacion'
-        total_amount = filtered_data['Monto'].sum()
-        distinct_ids = filtered_data['IDOperacion'].nunique()
-
-        # Display the results
-        st.write("Total Amount: ", total_amount)
-        st.write("Distinct Operation IDs: ", distinct_ids)
-
-        # Provide an option to download the filtered data
-        if st.button('Download Filtered Data as Excel'):
-            excel_bytes = dataframe_to_excel_bytes(filtered_data)
-            st.download_button(
-                label="Download Excel",
-                data=excel_bytes,
-                file_name="filtered_data.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+    # Display the results
+    display_results(filtered_data, total_amount, distinct_ids)
 
 # Streamlit interface
 def main():
+    st.set_page_config(page_title="Monthly Data Analysis", page_icon="📊")
+
     st.title('Monthly Data Analysis')
 
     # File uploader
     uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx"])
-
-    # Process the uploaded file
     if uploaded_file is not None:
-        process_data(uploaded_file)
+        data = pd.read_excel(uploaded_file)
+
+        # Ensure 'FechaEfectiva' is a datetime type
+        data['FechaEfectiva'] = pd.to_datetime(data['FechaEfectiva'])
+
+        # Selectbox for selecting the year
+        years = sorted(data['FechaEfectiva'].dt.year.unique())
+        selected_year = st.selectbox("Select Year", years)
+
+        # Slider for selecting the month
+        selected_month = st.slider("Select Month", 1, 12)
+
+        # Button to perform calculation
+        if st.button('Calculate'):
+            process_data(data, selected_year, selected_month)
+
+        # Display filtered DataFrame to Excel for download
+        if st.button('Download Excel'):
+            # Filter data for selected month and year
+            filtered_data = data[(data['FechaEfectiva'].dt.year == selected_year) & (data['FechaEfectiva'].dt.month == selected_month)]
+            excel_bytes = dataframe_to_excel_bytes(filtered_data)
+            st.download_button(
+                label="Download Excel",
+                data=excel_bytes,
+                file_name=f"{selected_year}_{selected_month}_data.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
 if __name__ == "__main__":
     main()
+
+
+
+
 
 
 
