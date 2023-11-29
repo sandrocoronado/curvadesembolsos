@@ -48,7 +48,8 @@ def main():
 
         # Selectbox for selecting the year
         years = sorted(data['FechaEfectiva'].dt.year.unique())
-        selected_year = st.selectbox("Select Year", years)
+        # Slider for selecting the year
+        selected_year = st.slider("Select Year", min_value=2013, max_value=2023, value=2023)
 
         # Slider for selecting the month
         selected_month = st.slider("Select Month", 1, 12)
