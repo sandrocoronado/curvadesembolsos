@@ -138,9 +138,9 @@ def main():
             st.pyplot(fig)
 
         # Cálculo de estadísticas de segmentos
-        if st.checkbox("Mostrar estadísticas de segmentos"):g
-        segment_stats = calculate_segment_statistics(rfm)
-        st.write(segment_stats)
+        if st.checkbox("Mostrar estadísticas de segmentos"):
+            segment_stats = calculate_segment_statistics(rfm)
+            st.write(segment_stats)
 
 
 if __name__ == "__main__":
