@@ -36,7 +36,7 @@ def process_data(data, selected_year, selected_month):
 
     # Mostrar los resultados
     st.write(f"Monto Total: {total_monto:,.2f}")
-    st.dataframe(filtered_data[['IDOperacion', 'Pais', 'FechaEfectiva', 'Monto', 'SECTOR', 'SUBSECTOR']])
+    st.dataframe(filtered_data[['IDOperacion', 'Pais', 'FechaEfectiva', 'Monto', 'IDAreaPrioritaria', 'IDAreaIntervencion']])
 
 # Interfaz de Streamlit
 def main():
@@ -65,7 +65,7 @@ def main():
         # Mostrar DataFrame preliminar
         preview_data = data[(data['FechaEfectiva'].dt.year == selected_year) & 
                             (data['FechaEfectiva'].dt.month == selected_month)]
-        st.dataframe(preview_data[['IDOperacion', 'Pais', 'FechaEfectiva', 'Monto', 'SECTOR', 'SUBSECTOR']])
+        st.dataframe(preview_data[['IDOperacion', 'Pais', 'FechaEfectiva', 'Monto', 'IDAreaPrioritaria', 'IDAreaIntervencion']])
 
         # Botón para realizar el cálculo
         if st.button('Calcular'):
@@ -73,6 +73,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
