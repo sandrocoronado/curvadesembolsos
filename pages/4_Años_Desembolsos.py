@@ -24,7 +24,7 @@ def merge_data(xls):
     merged_op_desembolsos = pd.merge(operaciones_desembolsos, operaciones, on='NoOperacion', how='left')
 
     # Fusionar el resultado con 'Proyectos' usando 'NoOperacion'
-    merged_data = pd.merge(merged_op_desembolsos, proyectos, on='NoOperacion', how='left')
+    merged_data = pd.merge(merged_op_desembolsos, proyectos, on='NoProyecto', how='left')
 
     return merged_data
 
