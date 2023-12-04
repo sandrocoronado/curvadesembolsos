@@ -3,7 +3,7 @@ import pandas as pd
 import io
 from datetime import datetime
 
-# Function to convert DataFrame to Excel format in memory
+# Función para convertir un DataFrame a formato Excel en memoria
 def dataframe_to_excel_bytes(df):
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
@@ -11,57 +11,71 @@ def dataframe_to_excel_bytes(df):
     output.seek(0)
     return output.getvalue()
 
-# Function to display results in a formatted table
-def display_results(df, total_amount, distinct_ids):
-    # Display the DataFrame as a table
-    st.dataframe(df.style.format({"Monto": "{:,.2f}"}))
+# Función para fusionar datos de múltiples hojas
+def merge_data(xls):
+    proyectos = xls.parse('Proyectos')
+    operaciones = xls.parse('Operaciones')
+    operaciones_desembolsos = xls.parse('OperacionesDesembolsos')
 
-    # Display summary below the table
-    st.write(f"(Suma del Monto): {total_amount:,.2f}")
-    st.write(f"(Cantidad de IDOperacion Distintos): {distinct_ids}")
+    # Fusionar 'operaciones_desembolsos' con 'operaciones'
+    merged_op_desembolsos = pd.merge(operaciones_desembolsos, operaciones, on='NoEtapa', how='left')
 
-# Function to process the data
-def process_data(data, year, month):
-    # Filter the data based on the selected month and year
-    filtered_data = data[(data['FechaEfectiva'].dt.year == year) & (data['FechaEfectiva'].dt.month == month)]
+    # Fusionar el resultado con 'proyectos'
+    merged_data = pd.merge(merged_op_desembolsos, proyectos, on='NoProyecto', how='left')
 
-    # Calculate the sum of 'Monto' and count of distinct 'IDOperacion'
-    total_amount = filtered_data['Monto'].sum()
-    distinct_ids = filtered_data['IDOperacion'].nunique()
+    return merged_data
 
-    # Display the results
-    display_results(filtered_data, total_amount, distinct_ids)
+# Función para procesar y mostrar los datos
+def process_data(data, selected_year, selected_month):
+    # Filtrar datos por año y mes seleccionados
+    filtered_data = data[(data['FechaEfectiva'].dt.year == selected_year) & 
+                         (data['FechaEfectiva'].dt.month == selected_month)]
 
-# Streamlit interface
+    # Calcular el monto total
+    total_monto = filtered_data['Monto'].sum()
+
+    # Mostrar los resultados
+    st.write(f"Monto Total: {total_monto:,.2f}")
+    st.dataframe(filtered_data[['IDOperacion', 'Pais', 'FechaEfectiva', 'Monto', 'SECTOR', 'SUBSECTOR']])
+
+# Interfaz de Streamlit
 def main():
-    st.set_page_config(page_title="Monthly Data Analysis", page_icon="📊")
+    st.set_page_config(page_title="Análisis de Datos Mensual", page_icon="📊")
+    st.title('Análisis de Datos Mensual')
 
-    st.title('Monthly Data Analysis')
-
-    # File uploader
-    uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx"])
+    # Cargador de archivos
+    uploaded_file = st.file_uploader("Elige un archivo Excel", type=["xlsx"])
     if uploaded_file is not None:
-        data = pd.read_excel(uploaded_file)
+        xls = pd.ExcelFile(uploaded_file)
+        data = merge_data(xls)
 
-        # Ensure 'FechaEfectiva' is a datetime type
+        # Asegurarse de que 'FechaEfectiva' es un tipo datetime
         data['FechaEfectiva'] = pd.to_datetime(data['FechaEfectiva'])
 
-        # Selectbox for selecting the year
-        years = sorted(data['FechaEfectiva'].dt.year.unique())
-        # Slider for selecting the year
-        selected_year = st.slider("Select Year", min_value=2013, max_value=2023, value=2023)
+        # Determinar el rango de años disponibles
+        min_year = int(data['FechaEfectiva'].dt.year.min())
+        max_year = int(data['FechaEfectiva'].dt.year.max())
 
-        # Slider for selecting the month
-        selected_month = st.slider("Select Month", 1, 12)
+        # Slider para seleccionar el año
+        selected_year = st.slider("Selecciona el Año", min_year, max_year, max_year)
 
-        # Button to perform calculation
-        if st.button('Calculate'):
+        # Slider para seleccionar el mes
+        selected_month = st.slider("Selecciona el Mes", 1, 12, 1)
+
+        # Mostrar DataFrame preliminar
+        preview_data = data[(data['FechaEfectiva'].dt.year == selected_year) & 
+                            (data['FechaEfectiva'].dt.month == selected_month)]
+        st.dataframe(preview_data[['IDOperacion', 'Pais', 'FechaEfectiva', 'Monto', 'SECTOR', 'SUBSECTOR']])
+
+        # Botón para realizar el cálculo
+        if st.button('Calcular'):
             process_data(data, selected_year, selected_month)
-
-        
 
 if __name__ == "__main__":
     main()
+
+
+
 
 
 
