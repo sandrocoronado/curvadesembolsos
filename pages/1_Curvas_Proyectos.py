@@ -11,26 +11,26 @@ _lock = threading.Lock()
 def process_dataframe(xls_path):
     with _lock:
         xls = pd.ExcelFile(xls_path, engine='openpyxl')
-        desembolsos = xls.parse('Desembolsos')
+        proyectos = xls.parse('Proyectos')
         operaciones = xls.parse('Operaciones')
+        operaciones_desembolsos = xls.parse('OperacionesDesembolsos')
 
-    # Asegúrate de que las columnas 'SECTOR' y 'SUBSECTOR' estén en 'operaciones'
-    merged_df = pd.merge(desembolsos, operaciones[['IDEtapa', 'FechaVigencia', 'AporteFonplata', 'SECTOR', 'SUBSECTOR']], on='IDEtapa', how='left')
-    merged_df['FechaEfectiva'] = pd.to_datetime(merged_df['FechaEfectiva'], dayfirst=True)
-    merged_df['FechaVigencia'] = pd.to_datetime(merged_df['FechaVigencia'], dayfirst=True)
-    merged_df['Ano'] = ((merged_df['FechaEfectiva'] - merged_df['FechaVigencia']).dt.days / 366).astype(int)
-    merged_df['Meses'] = ((merged_df['FechaEfectiva'] - merged_df['FechaVigencia']).dt.days / 30).astype(int)
+    # Fusionar los datos
+    merged_op_desembolsos = pd.merge(operaciones, operaciones_desembolsos, on=['NoOperacion', 'NoEtapa'], how='left')
+    merged_all = pd.merge(merged_op_desembolsos, proyectos, on='NoProyecto', how='left')
 
-    result_df = merged_df.groupby(['IDEtapa', 'Ano', 'Meses', 'IDDesembolso', 'AporteFonplata'])['Monto'].sum().reset_index()
-    result_df['Monto Acumulado'] = result_df.groupby(['IDEtapa'])['Monto'].cumsum().reset_index(drop=True)
+    # Realizar cálculos y transformaciones necesarias
+    merged_all['FechaEfectiva'] = pd.to_datetime(merged_all['FechaEfectiva'], dayfirst=True)
+    merged_all['FechaVigencia'] = pd.to_datetime(merged_all['FechaVigencia'], dayfirst=True)
+    merged_all['Ano'] = ((merged_all['FechaEfectiva'] - merged_all['FechaVigencia']).dt.days / 366).astype(int)
+
+    result_df = merged_all.groupby(['NoProyecto', 'Ano', 'IDEtapa'])['Monto'].sum().reset_index()
+    result_df['Monto Acumulado'] = result_df.groupby(['NoProyecto'])['Monto'].cumsum().reset_index(drop=True)
+
+    # Asumir una columna 'AporteFonplata' en alguna de las hojas para cálculos de porcentaje
+    # Si no existe, se debería ajustar este cálculo
     result_df['Porcentaje del Monto'] = result_df['Monto'] / result_df['AporteFonplata'] * 100
     result_df['Porcentaje del Monto Acumulado'] = result_df['Monto Acumulado'] / result_df['AporteFonplata'] * 100
-
-    country_map = {'AR': 'Argentina', 'BO': 'Bolivia', 'BR': 'Brasil', 'PY': 'Paraguay', 'UR': 'Uruguay'}
-    result_df['Pais'] = result_df['IDEtapa'].str[:2].map(country_map).fillna('Desconocido')
-
-    # Añadir 'SECTOR', 'SUBSECTOR' y 'FechaVigencia' 'APODO' al DataFrame resultante
-    result_df = pd.merge(result_df, operaciones[['IDEtapa', 'SECTOR', 'SUBSECTOR', 'FechaVigencia','APODO']], on='IDEtapa', how='left')
 
     return result_df
 
