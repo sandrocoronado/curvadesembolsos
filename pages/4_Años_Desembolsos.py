@@ -2,6 +2,11 @@ import streamlit as st
 import pandas as pd
 import io
 from datetime import datetime
+from streamlit.logger import get_logger
+import threading
+
+LOGGER = get_logger(__name__)
+_lock = threading.Lock()
 
 def dataframe_to_excel_bytes(df):
     output = io.BytesIO()
