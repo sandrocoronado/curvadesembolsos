@@ -17,10 +17,10 @@ def merge_data(xls):
     operaciones = xls.parse('Operaciones')
     operaciones_desembolsos = xls.parse('OperacionesDesembolsos')
 
-    # Fusionar 'operaciones_desembolsos' con 'operaciones'
+    # Fusionar 'operaciones_desembolsos' con 'operaciones' usando una clave común
     merged_op_desembolsos = pd.merge(operaciones_desembolsos, operaciones, on='NoEtapa', how='left')
 
-    # Fusionar el resultado con 'proyectos'
+    # Fusionar el resultado con 'proyectos' usando otra clave común
     merged_data = pd.merge(merged_op_desembolsos, proyectos, on='NoProyecto', how='left')
 
     return merged_data
@@ -73,6 +73,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
