@@ -19,18 +19,26 @@ def process_dataframe(xls_path):
     merged_op_desembolsos = pd.merge(operaciones, operaciones_desembolsos, on=['NoOperacion', 'NoEtapa'], how='left')
     merged_all = pd.merge(merged_op_desembolsos, proyectos, on='NoProyecto', how='left')
 
-    # Realizar cálculos y transformaciones necesarias
+    # Convertir fechas a datetime y calcular la diferencia en años
     merged_all['FechaEfectiva'] = pd.to_datetime(merged_all['FechaEfectiva'], dayfirst=True)
     merged_all['FechaVigencia'] = pd.to_datetime(merged_all['FechaVigencia'], dayfirst=True)
+    merged_all.dropna(subset=['FechaEfectiva', 'FechaVigencia'], inplace=True)
     merged_all['Ano'] = ((merged_all['FechaEfectiva'] - merged_all['FechaVigencia']).dt.days / 366).astype(int)
 
+    # Realizar cálculos utilizando 'AporteFONPLATA'
     result_df = merged_all.groupby(['NoProyecto', 'Ano', 'IDEtapa'])['Monto'].sum().reset_index()
     result_df['Monto Acumulado'] = result_df.groupby(['NoProyecto'])['Monto'].cumsum().reset_index(drop=True)
 
-    # Asumir una columna 'AporteFonplata' en alguna de las hojas para cálculos de porcentaje
-    # Si no existe, se debería ajustar este cálculo
-    result_df['Porcentaje del Monto'] = result_df['Monto'] / result_df['AporteFonplata'] * 100
-    result_df['Porcentaje del Monto Acumulado'] = result_df['Monto Acumulado'] / result_df['AporteFonplata'] * 100
+    # Verificar si 'AporteFONPLATA' está en 'operaciones'
+    if 'AporteFONPLATAVigente' in operaciones.columns:
+        result_df = pd.merge(result_df, operaciones[['NoProyecto', 'AporteFONPLATAVigente']], on='NoProyecto', how='left')
+        result_df['Porcentaje del Monto'] = result_df['Monto'] / result_df['AporteFONPLATAVigente'] * 100
+        result_df['Porcentaje del Monto Acumulado'] = result_df['Monto Acumulado'] / result_df['AporteFONPLATAVigente'] * 100
+    else:
+        st.error("La columna 'AporteFONPLATA' no se encontró en la hoja 'Operaciones'.")
+
+    # Añadir 'IDAreaPrioritaria' (Sector) y 'IDAreaIntervencion' (Subsector) al DataFrame resultante
+    result_df = pd.merge(result_df, proyectos[['NoProyecto', 'IDAreaPrioritaria', 'IDAreaIntervencion']], on='NoProyecto', how='left')
 
     return result_df
 
@@ -54,6 +62,9 @@ def run():
     
     if uploaded_file:
         result_df = process_dataframe(uploaded_file)
+        # Initialize combined_df to ensure it's always defined for later use
+        combined_df = pd.DataFrame()
+
         st.write(result_df)
         
         # Convertir el DataFrame a bytes y agregar botón de descarga
@@ -65,45 +76,56 @@ def run():
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
         
-        # Suponiendo que 'result_df' es tu DataFrame y tiene las columnas 'IDEtapa' y 'APODO'
-        combined_series = result_df['IDEtapa'] + " (" + result_df['APODO'] + ")"
-
-        # Usando esta serie combinada en el selectbox
-        selected_combined = st.selectbox('Selecciona el Proyecto:', combined_series.unique())
-
-        # Extraemos el valor de 'IDEtapa' del texto seleccionado para filtrar el DataFrame
-        selected_country = selected_combined.split(" (")[0]
-        filtered_df = result_df[result_df['IDEtapa'] == selected_country]
-
-        
-        # Calcular Monto y Monto Acumulado para cada año
-        df_monto_anual = filtered_df.groupby('Ano')["Monto"].sum().reset_index()
-        df_monto_acumulado_anual = df_monto_anual['Monto'].cumsum()
-
-        # Calcular Porcentaje del Monto de forma acumulativa
-        aporte_total = filtered_df['AporteFonplata'].iloc[0]  # Asume que AporteFonplata es constante
-        df_porcentaje_monto_anual = (df_monto_anual['Monto'] / aporte_total * 100).round(2)
-        df_porcentaje_monto_acumulado_anual = (df_monto_acumulado_anual / aporte_total * 100).round(2)
-
-        # Crear DataFrame combinado para el cuadro de resumen
-        combined_df = pd.DataFrame({
-            'Ano': df_monto_anual['Ano'],
-            'Monto': df_monto_anual['Monto'],
-            'Monto Acumulado': df_monto_acumulado_anual,
-            'Porcentaje del Monto': df_porcentaje_monto_anual,
-            'Porcentaje del Monto Acumulado': df_porcentaje_monto_acumulado_anual
-        })
-
-        st.write("Resumen de Datos:")
-        st.write(combined_df)
-
-        # Convertir Monto a millones y redondear a tres decimales
-        combined_df['Monto'] = (combined_df['Monto'] / 1_000_000).round(3)
-
         # Definir colores para los gráficos
         color_monto = 'steelblue'
         color_porcentaje = 'firebrick'
         color_acumulado = 'goldenrod'
+        
+        # Asegurar que las columnas necesarias estén presentes
+        if 'IDEtapa' in result_df.columns:
+            # Crear una serie combinada con 'IDEtapa' y 'APODO' si está disponible
+            if 'APODO' in result_df.columns:
+                combined_series = result_df['IDEtapa'] + " (" + result_df['APODO'] + ")"
+            else:
+                combined_series = result_df['IDEtapa'].astype(str)
+            
+            # Ordenar las opciones alfabéticamente
+            sorted_combined_series = combined_series.sort_values()
+
+            # Usar la serie ordenada en el selectbox
+            selected_combined = st.selectbox('Selecciona el Proyecto:', sorted_combined_series.unique())
+            selected_etapa = selected_combined.split(" (")[0]
+            filtered_df = result_df[result_df['IDEtapa'] == selected_etapa]
+
+            if 'AporteFONPLATAVigente' in filtered_df.columns:
+                # Perform calculations only if 'AporteFONPLATA' is available
+                df_monto_anual = filtered_df.groupby('Ano')['Monto'].sum().reset_index()
+                df_monto_acumulado_anual = df_monto_anual['Monto'].cumsum()
+
+                aporte_total = filtered_df['AporteFONPLATAVigente'].iloc[0]
+                df_porcentaje_monto_anual = (df_monto_anual['Monto'] / aporte_total * 100).round(2)
+                df_porcentaje_monto_acumulado_anual = (df_monto_acumulado_anual / aporte_total * 100).round(2)
+
+                combined_df = pd.DataFrame({
+                    'Ano': df_monto_anual['Ano'],
+                    'Monto': df_monto_anual['Monto'],
+                    'Monto Acumulado': df_monto_acumulado_anual,
+                    'Porcentaje del Monto': df_porcentaje_monto_anual,
+                    'Porcentaje del Monto Acumulado': df_porcentaje_monto_acumulado_anual
+                })
+
+                st.write("Resumen de Datos:")
+                st.write(combined_df)
+                
+                # Ensure 'Monto' is in the combined_df before attempting to modify it
+                if 'Monto' in combined_df.columns:
+                    combined_df['Monto'] = (combined_df['Monto'] / 1_000_000).round(3)
+                # Additional code for chart generation goes here...
+            else:
+                st.error("La columna 'AporteFONPLATA' no está presente en los datos cargados.")
+        else:
+            st.error("La columna 'IDEtapa' no está presente en los datos cargados.")
+
 
         # Función para crear gráficos de líneas con puntos y etiquetas
         def line_chart_with_labels(data, x_col, y_col, title, color):
