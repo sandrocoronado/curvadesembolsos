@@ -20,11 +20,11 @@ def merge_data(xls):
     operaciones = xls.parse('Operaciones')
     operaciones_desembolsos = xls.parse('OperacionesDesembolsos')
 
-    # Primero, fusionar 'operaciones_desembolsos' con 'operaciones' usando 'NoEtapa'
+    # Fusionar 'OperacionesDesembolsos' con 'Operaciones' usando 'NoEtapa'
     merged_op_desembolsos = pd.merge(operaciones_desembolsos, operaciones, on='NoEtapa', how='left')
 
-    # Luego, fusionar el resultado con 'proyectos' usando 'NoProyecto'
-    merged_data = pd.merge(merged_op_desembolsos, proyectos, on='NoProyecto', how='left')
+    # Fusionar el resultado con 'Proyectos' usando 'NoOperacion'
+    merged_data = pd.merge(merged_op_desembolsos, proyectos, on='NoOperacion', how='left')
 
     return merged_data
 
