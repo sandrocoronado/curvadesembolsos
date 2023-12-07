@@ -28,12 +28,16 @@ def merge_data(xls):
 
     return merged_data
 
-def process_data(data, selected_year, selected_month):
-    filtered_data = data[(data['FechaEfectiva'].dt.year == selected_year) & 
-                         (data['FechaEfectiva'].dt.month == selected_month)]
+def process_data(merge_data, selected_year, selected_month):
+    filtered_data = merge_data[(merge_data['FechaEfectiva'].dt.year == selected_year) & 
+                         (merge_data['FechaEfectiva'].dt.month == selected_month)]
     total_monto = filtered_data['Monto'].sum()
     st.write(f"Monto Total: {total_monto:,.2f}")
-    st.dataframe(filtered_data[['IDOperacion', 'Pais', 'FechaEfectiva', 'Monto', 'IDAreaPrioritaria', 'IDAreaIntervencion']])
+    columns_to_display = ['IDOperacion', 'Pais', 'FechaEfectiva', 'Monto', 'IDAreaPrioritaria', 'IDAreaIntervencion']
+    if all(col in filtered_data.columns for col in columns_to_display):
+        st.dataframe(filtered_data[columns_to_display])
+    else:
+        st.write("One or more columns are missing in the DataFrame.")
 
 def main():
     st.set_page_config(page_title="Análisis de Datos Mensual", page_icon="📊")
@@ -53,13 +57,18 @@ def main():
 
         preview_data = data[(data['FechaEfectiva'].dt.year == selected_year) & 
                             (data['FechaEfectiva'].dt.month == selected_month)]
-        st.dataframe(preview_data[['IDOperacion', 'Pais', 'FechaEfectiva', 'Monto', 'IDAreaPrioritaria', 'IDAreaIntervencion']])
+        columns_to_display = ['IDOperacion', 'Pais', 'FechaEfectiva', 'Monto', 'IDAreaPrioritaria', 'IDAreaIntervencion']
+        if all(col in preview_data.columns for col in columns_to_display):
+            st.dataframe(preview_data[columns_to_display])
+        else:
+            st.write("One or more columns are missing in the DataFrame.")
 
         if st.button('Calcular'):
             process_data(data, selected_year, selected_month)
 
 if __name__ == "__main__":
     main()
+
 
 
 
