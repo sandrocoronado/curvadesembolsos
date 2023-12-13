@@ -2,24 +2,120 @@ import streamlit as st
 import pandas as pd
 from streamlit.logger import get_logger
 import altair as alt
+import re
+from datetime import datetime
 import threading
-import io  # <-- Importa io
+import io
 
 LOGGER = get_logger(__name__)
 _lock = threading.Lock()
 
-def process_dataframe(xls_path):
+# URLs de las hojas de Google Sheets
+sheet_url_proyectos = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHedheaRLyqnjwtsRvlBFFOnzhfarkFMoJ04chQbKZCBRZXh_2REE3cmsRC69GwsUK0PoOVv95xptX/pub?gid=2084477941&single=true&output=csv"
+sheet_url_operaciones = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHedheaRLyqnjwtsRvlBFFOnzhfarkFMoJ04chQbKZCBRZXh_2REE3cmsRC69GwsUK0PoOVv95xptX/pub?gid=1468153763&single=true&output=csv"
+sheet_url_desembolsos = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHedheaRLyqnjwtsRvlBFFOnzhfarkFMoJ04chQbKZCBRZXh_2REE3cmsRC69GwsUK0PoOVv95xptX/pub?gid=1657640798&single=true&output=csv"
+
+def convert_monto_to_numeric(monto_str):
+    if pd.isnull(monto_str):
+        return None
+    try:
+        return float(monto_str.replace('.', '').replace(',', '.'))
+    except ValueError:
+        LOGGER.error(f"Error al convertir el monto: {monto_str}")
+        return None
+
+# Función para convertir las fechas del formato español al formato estándar
+def convert_spanish_date(date_str):
+    months = {
+        'ENE': 'Jan', 'FEB': 'Feb', 'MAR': 'Mar', 'ABR': 'Apr', 'MAY': 'May', 'JUN': 'Jun',
+        'JUL': 'Jul', 'AGO': 'Aug', 'SEP': 'Sep', 'OCT': 'Oct', 'NOV': 'Nov', 'DIC': 'Dec'
+    }
+    match = re.match(r"(\d{2}) (\w{3}) (\d{2})", date_str)
+    if match:
+        day, spanish_month, year = match.groups()
+        english_month = months.get(spanish_month.upper())
+        if english_month:
+            return datetime.strptime(f"{day} {english_month} 20{year}", "%d %b %Y").strftime("%d/%m/%Y")
+    return date_str
+
+# Función para manejar diferentes formatos de fechas y valores nulos
+def convert_dates(date_str):
+    if pd.isnull(date_str):
+        return None
+
+    if not isinstance(date_str, str):
+        return date_str
+
+    months = {
+        'ene': '01', 'feb': '02', 'mar': '03', 'abr': '04', 'may': '05', 'jun': '06',
+        'jul': '07', 'ago': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dic': '12'
+    }
+
+    try:
+        # Formato '15-ago-14' o '1-dic-17'
+        day, month, year = date_str.split('-')
+        if len(year) == 2: year = f"20{year}"
+        month = months.get(month[:3].lower(), '00')
+        return f"{day.zfill(2)}/{month}/{year}"
+    except ValueError:
+        pass
+
+    try:
+        # Formato 'martes, 17 de noviembre de 2015'
+        parts = date_str.split(' ')
+        day = parts[1]
+        month = parts[3].lower()[:3]
+        year = parts[5]
+        return f"{day.zfill(2)}/{months[month]}/{year}"
+    except (ValueError, IndexError):
+        pass
+
+    try:
+        # Formato '13-abr-20'
+        return datetime.strptime(date_str, '%d-%b-%y').strftime('%d/%m/%Y')
+    except ValueError:
+        pass
+
+    return date_str
+
+# Función para cargar los datos desde la URL
+def load_data_from_url(url):
     with _lock:
-        xls = pd.ExcelFile(xls_path, engine='openpyxl')
-        proyectos = xls.parse('Proyectos')
-        operaciones = xls.parse('Operaciones')
-        operaciones_desembolsos = xls.parse('OperacionesDesembolsos')
+        try:
+            return pd.read_csv(url)
+        except Exception as e:
+            LOGGER.error("Error al cargar los datos: " + str(e))
+            return None
+
+# Adaptación de la función process_dataframe para cargar desde Google Sheets
+def process_data():
+    proyectos = load_data_from_url(sheet_url_proyectos)
+    operaciones = load_data_from_url(sheet_url_operaciones)
+    operaciones_desembolsos = load_data_from_url(sheet_url_desembolsos)
+
+    # Verificar la carga correcta de datos
+    if proyectos is None or operaciones is None or operaciones_desembolsos is None:
+        st.error("Error en la carga de datos desde Google Sheets.")
+        return pd.DataFrame()
+
+    # Aplicar la conversión de fechas
+    for df in [proyectos, operaciones, operaciones_desembolsos]:
+        if 'FechaEfectiva' in df.columns:
+            df['FechaEfectiva'] = df['FechaEfectiva'].apply(convert_dates)
+        if 'FechaVigencia' in df.columns:
+            df['FechaVigencia'] = df['FechaVigencia'].apply(convert_dates)
+
+    # Limpiar y convertir la columna 'Monto' en operaciones_desembolsos
+    operaciones_desembolsos['Monto'] = operaciones_desembolsos['Monto'].apply(convert_monto_to_numeric)
+    operaciones['AporteFONPLATAVigente'] = operaciones['AporteFONPLATAVigente'].apply(convert_monto_to_numeric)
 
     # Fusionar los datos
     merged_op_desembolsos = pd.merge(operaciones, operaciones_desembolsos, on=['NoOperacion', 'NoEtapa'], how='left')
     merged_all = pd.merge(merged_op_desembolsos, proyectos, on='NoProyecto', how='left')
 
     # Convertir fechas a datetime y calcular la diferencia en años
+    merged_all['Monto'] = pd.to_numeric(merged_all['Monto'], errors='coerce')
+    merged_all['AporteFONPLATAVigente'] = pd.to_numeric(merged_all['AporteFONPLATAVigente'], errors='coerce')
     merged_all['FechaEfectiva'] = pd.to_datetime(merged_all['FechaEfectiva'], dayfirst=True)
     merged_all['FechaVigencia'] = pd.to_datetime(merged_all['FechaVigencia'], dayfirst=True)
     merged_all.dropna(subset=['FechaEfectiva', 'FechaVigencia'], inplace=True)
@@ -28,6 +124,7 @@ def process_dataframe(xls_path):
     # Realizar cálculos utilizando 'AporteFONPLATA'
     result_df = merged_all.groupby(['NoProyecto', 'Ano', 'IDEtapa'])['Monto'].sum().reset_index()
     result_df['Monto Acumulado'] = result_df.groupby(['NoProyecto'])['Monto'].cumsum().reset_index(drop=True)
+
 
     # Verificar si 'AporteFONPLATA' está en 'operaciones'
     if 'AporteFONPLATAVigente' in operaciones.columns:
@@ -38,11 +135,12 @@ def process_dataframe(xls_path):
         st.error("La columna 'AporteFONPLATA' no se encontró en la hoja 'Operaciones'.")
 
     # Añadir 'IDAreaPrioritaria' (Sector) y 'IDAreaIntervencion' (Subsector) al DataFrame resultante
-    result_df = pd.merge(result_df, proyectos[['NoProyecto', 'IDAreaPrioritaria', 'IDAreaIntervencion']], on='NoProyecto', how='left')
+    result_df = pd.merge(result_df, proyectos[['NoProyecto', 'IDAreaPrioritaria', 'IDAreaIntervencion','Alias']], on='NoProyecto', how='left')
 
     return result_df
 
 
+# Función para convertir DataFrame a bytes para descargar en Excel
 def dataframe_to_excel_bytes(df):
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
@@ -57,14 +155,11 @@ def run():
     )
 
     st.title("Desembolsos de Proyectos📊")
-    st.write("Carga tu archivo Excel y explora las métricas relacionadas con los desembolsos.")
-    uploaded_file = st.file_uploader("Carga tu Excel aquí", type="xlsx")
-    
-    if uploaded_file:
-        result_df = process_dataframe(uploaded_file)
-        # Initialize combined_df to ensure it's always defined for later use
-        combined_df = pd.DataFrame()
+    st.write("Explora las métricas relacionadas con los desembolsos cargando los datos desde Google Sheets.")
 
+    # Procesar datos desde Google Sheets
+    result_df = process_data()
+    if not result_df.empty:
         st.write(result_df)
         
         # Convertir el DataFrame a bytes y agregar botón de descarga
@@ -75,7 +170,7 @@ def run():
             file_name="resultados_desembolsos.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-        
+
         # Definir colores para los gráficos
         color_monto = 'steelblue'
         color_porcentaje = 'firebrick'
@@ -84,8 +179,8 @@ def run():
         # Asegurar que las columnas necesarias estén presentes
         if 'IDEtapa' in result_df.columns:
             # Crear una serie combinada con 'IDEtapa' y 'APODO' si está disponible
-            if 'APODO' in result_df.columns:
-                combined_series = result_df['IDEtapa'] + " (" + result_df['APODO'] + ")"
+            if 'Alias' in result_df.columns:
+                combined_series = result_df['IDEtapa'] + " (" + result_df['Alias'] + ")"
             else:
                 combined_series = result_df['IDEtapa'].astype(str)
             
