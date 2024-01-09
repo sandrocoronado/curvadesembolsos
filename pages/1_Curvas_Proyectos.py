@@ -41,6 +41,7 @@ def process_data(df_proyectos, df_operaciones, df_operaciones_desembolsos):
     
     # Convertir 'Monto' a numérico
     df_operaciones_desembolsos['Monto'] = df_operaciones_desembolsos['Monto'].apply(convert_to_float)
+    df_operaciones_desembolsos = df_operaciones_desembolsos.iloc[:, 1:].drop_duplicates()
 
     # Fusionar DataFrames
     merged_df = pd.merge(df_operaciones_desembolsos, df_operaciones, on='NoOperacion', how='left')
